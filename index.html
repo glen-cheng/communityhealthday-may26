@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PolyU Healthy Longevity Study</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+  }
+  .stage {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    perspective: 2000px;
+  }
+  .card {
+    position: relative;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    max-height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.7s ease-in-out;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+  .face {
+    position: absolute;
+    inset: 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .face.back { transform: rotateY(180deg); }
+  .face a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  .face img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  button {
+    margin-top: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  button:hover { background: #1d4ed8; }
+  button svg { width: 16px; height: 16px; }
+  .hint {
+    margin-top: 0.4rem;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="card" id="card">
+      <div class="face front">
+        <a href="https://hkpuhealthandsocial.au1.qualtrics.com/jfe/form/SV_d6EmyMqskrvphLU?Q_CHL=qr"
+           target="_blank" rel="noopener noreferrer" title="Open survey">
+          <img id="front" alt="Front Poster" />
+        </a>
+      </div>
+      <div class="face back">
+        <a href="https://hkpuhealthandsocial.au1.qualtrics.com/jfe/form/SV_d6EmyMqskrvphLU?Q_CHL=qr"
+           target="_blank" rel="noopener noreferrer" title="Open survey">
+          <img id="back" alt="Back Poster" />
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <button id="flipBtn">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+      <path d="M21 3v5h-5"/>
+    </svg>
+    <span id="flipLabel"></span>
+  </button>
+  <p class="hint">Click the poster to open the survey</p>
+
+<script>
+  // ===== EDIT THESE TWO LINES IF LANGUAGES ARE SWAPPED =====
+  // Set which Imgur ID corresponds to which language:
+  const ENGLISH_ID = 'mYwJWRq';
+  const CHINESE_ID = '92jPpNU';
+  // Which language shows first ('en' or 'zh'):
+  const STARTING_LANG = 'en';
+  // =========================================================
+
+  const EXTS = ['jpg', 'png', 'jpeg'];
+
+  function loadImage(id, imgEl, onLoad) {
+    let i = 0;
+    (function tryNext() {
+      if (i >= EXTS.length) return;
+      const url = `https://i.imgur.com/${id}.${EXTS[i]}`;
+      const test = new Image();
+      test.onload = () => {
+        imgEl.src = url;
+        if (onLoad) onLoad(test.naturalWidth, test.naturalHeight);
+      };
+      test.onerror = () => { i++; tryNext(); };
+      test.src = url;
+    })();
+  }
+
+  const card = document.getElementById('card');
+  const frontImg = document.getElementById('front');
+  const backImg = document.getElementById('back');
+  const flipLabel = document.getElementById('flipLabel');
+
+  // Assign images to front/back based on starting language
+  const frontId = STARTING_LANG === 'en' ? ENGLISH_ID : CHINESE_ID;
+  const backId  = STARTING_LANG === 'en' ? CHINESE_ID : ENGLISH_ID;
+  // Track current visible language
+  let currentLang = STARTING_LANG;
+
+  card.style.aspectRatio = '8.5 / 11';
+  loadImage(frontId, frontImg, (w, h) => {
+    if (w && h) card.style.aspectRatio = `${w} / ${h}`;
+  });
+  loadImage(backId, backImg);
+
+  function updateLabel() {
+    // Button shows the OTHER language (the one you'll see if you click)
+    flipLabel.textContent = currentLang === 'en' ? 'Flip for Chinese' : 'Flip for English';
+  }
+  updateLabel();
+
+  document.getElementById('flipBtn').addEventListener('click', () => {
+    card.classList.toggle('flipped');
+    currentLang = currentLang === 'en' ? 'zh' : 'en';
+    updateLabel();
+  });
+</script>
+</body>
+</html>
